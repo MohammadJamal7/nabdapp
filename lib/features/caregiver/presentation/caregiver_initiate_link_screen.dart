@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 
 class CaregiverInitiateLinkScreen extends ConsumerStatefulWidget {
   const CaregiverInitiateLinkScreen({super.key});
@@ -108,11 +109,7 @@ class _CaregiverInitiateLinkScreenState extends ConsumerState<CaregiverInitiateL
                       labelText: 'رقم هاتف المريض',
                       prefixIcon: Icon(Icons.phone),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'الرجاء إدخال رقم الهاتف';
-                      if (value.length < 10) return 'رقم الهاتف غير صحيح';
-                      return null;
-                    },
+                    validator: AppValidators.phone,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(

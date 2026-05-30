@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,7 @@ void main() async {
   );
 
   try {
+    await Firebase.initializeApp();
     await StorageService.init();
     ApiClient.init();
     if (StorageService.isAuthenticated) {
@@ -33,11 +35,16 @@ void main() async {
   runApp(const ProviderScope(child: NabdApp()));
 }
 
-class NabdApp extends ConsumerWidget {
+class NabdApp extends ConsumerStatefulWidget {
   const NabdApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NabdApp> createState() => _NabdAppState();
+}
+
+class _NabdAppState extends ConsumerState<NabdApp> {
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(

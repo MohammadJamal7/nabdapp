@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 import '../../auth/data/models/auth_models.dart';
 import '../../auth/presentation/auth_providers.dart';
 
@@ -89,19 +90,13 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                 TextFormField(
                   controller: _firstNameController,
                   decoration: const InputDecoration(labelText: 'الاسم الأول', prefixIcon: Icon(Icons.person)),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'الرجاء إدخال الاسم';
-                    return null;
-                  },
+                  validator: AppValidators.firstName,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _lastNameController,
                   decoration: const InputDecoration(labelText: 'الاسم الأخير', prefixIcon: Icon(Icons.person_outline)),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'الرجاء إدخال الاسم';
-                    return null;
-                  },
+                  validator: AppValidators.lastName,
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(

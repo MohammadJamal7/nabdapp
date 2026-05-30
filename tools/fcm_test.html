@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>FCM Test — HTTP v1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.25/jsrsasign-all-min.js">
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; padding: 20px; color: #1e293b; }
+  .card { background: #fff; border-radius: 16px; padding: 24px; max-width: 720px; margin: 0 auto 16px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  p { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+  label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; margin-top: 14px; }
+  input, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; direction: ltr; text-align: left; }
+  textarea { min-height: 60px; font-family: monospace; }
+  button { padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 18px; color: #fff; }
+  .btn-primary { width: 100%; background: #0d9488; }
+  .btn-primary:hover { background: #0f766e; }
+  .btn-copy { background: #475569; font-size: 13px; padding: 6px 12px; width: auto; margin: 4px 0 0; }
+  .btn-copy:hover { background: #334155; }
+  .box { background: #1e293b; color: #a5f3fc; padding: 14px; border-radius: 10px; font-family: monospace; font-size: 13px; white-space: pre-wrap; min-height: 40px; direction: ltr; text-align: left; margin-top: 12px; user-select: all; overflow-x: auto; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row input { flex: 1; }
+  hr { margin: 16px 0; border: none; border-top: 1px solid #e2e8f0; }
+  .good { background: #f0fdf4; color: #065f46; padding: 12px; border-radius: 10px; }
+  .bad { background: #fef2f2; color: #991b1b; padding: 12px; border-radius: 10px; }
+  table { width:100%; font-size:13px; border-collapse:collapse; }
+  th, td { text-align:right; padding:6px; border-bottom:1px solid #e2e8f0; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>FCM Test — HTTP v1 API</h1>
+  <p>يستخدم Service Account Private Key لإرسال إشعار مباشرة</p>
+
+  <label>معرّف المشروع (Project ID)</label>
+  <input id="projectId" placeholder="nabd-xxxxx">
+
+  <label>Private Key (Service Account — من Firebase Console)</label>
+  <textarea id="privateKey" rows="4" placeholder="-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----"></textarea>
+
+  <label>Client Email (Service Account)</label>
+  <input id="clientEmail" placeholder="firebase-adminsdk-xxxxx@nabd-xxxxx.iam.gserviceaccount.com">
+
+  <label>رمز الجهاز (FCM Token)</label>
+  <input id="deviceToken" placeholder="eH_FDeclTmCfuuflaR1SDb:APA91b...">
+
+  <label>عنوان الإشعار</label>
+  <input id="title" value="اختبار تنبيه">
+
+  <label>نص الإشعار</label>
+  <textarea id="body">هذا إشعار تجريبي</textarea>
+
+  <button class="btn-primary" onclick="sendV1()">إرسال الإشعار</button>
+
+  <div class="box" id="output" style="margin-top:18px;">👉 النتيجة ستظهر هنا</div>
+</div>
+
+<div class="card">
+  <h2>كيف تحصل على البيانات؟</h2>
+  <ol style="padding-right:20px; color:#334155; font-size:14px; line-height:2.2;">
+    <li>Firebase Console ← ⚙️ Project Settings ← <strong>Service Accounts</strong></li>
+    <li>اضغط <strong>Generate new private key</strong> ← حمل ملف JSON</li>
+    <li>انسخ القيم التالية من الملف:
+      <br><code>project_id</code> ← Project ID
+      <br><code>client_email</code> ← Client Email
+      <br><code>private_key</code> ← Private Key (كلها، من `-----BEGIN` ل `-----END`)</li>
+    <li>انسخ FCM Token من Log التطبيق (<code>fcmToken:</code>)</li>
+  </ol>
+
+  <hr>
+
+  <h2>تفسير النتائج</h2>
+  <table>
+    <tr><th>الرد</th><th>المعنى</th></tr>
+    <tr><td><code>name: projects/.../messages/...</code></td><td>✅ تم الإرسال بنجاح</td></tr>
+    <tr><td><code>401</code> / <code>403</code></td><td>Private Key أو Client Email غير صحيح</td></tr>
+    <tr><td><code>404</code></td><td>Project ID خاطئ</td></tr>
+    <tr><td><code>UNREGISTERED</code></td><td>FCM Token قديم — أعد تشغيل التطبيق</td></tr>
+  </table>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const out = id => $(id);
+
+function log(msg, type) {
+  const el = $('output');
+  el.innerHTML = msg;
+  el.style.color = type === 'error' ? '#fca5a5' : type === 'success' ? '#86efac' : '#a5f3fc';
+}
+
+async function getAccessToken(clientEmail, privateKey) {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: clientEmail,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now,
+  };
+
+  const sHeader = JSON.stringify(header);
+  const sPayload = JSON.stringify(payload);
+  const b64Header = btoa(sHeader).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const b64Payload = btoa(sPayload).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const signatureInput = `${b64Header}.${b64Payload}`;
+
+  const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
+  sig.init(privateKey);
+  sig.updateString(signatureInput);
+  const b64Sig = hextob64(sig.sign()).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+  const assertion = `${signatureInput}.${b64Sig}`;
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: assertion,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`فشل الحصول على Access Token: HTTP ${res.status} — ${errText}`);
+  }
+
+  const data = await res.json();
+  return data.access_token;
+}
+
+async function sendV1() {
+  const projectId   = $('projectId').value.trim();
+  const privateKey  = $('privateKey').value.trim();
+  const clientEmail = $('clientEmail').value.trim();
+  const deviceToken = $('deviceToken').value.trim();
+  const title       = $('title').value.trim();
+  const body        = $('body').value.trim();
+
+  if (!projectId || !privateKey || !clientEmail || !deviceToken || !title || !body) {
+    return log('⚠️ الرجاء إدخال جميع الحقول', 'error');
+  }
+
+  log('🔄 جاري الحصول على Access Token...', '');
+  let accessToken;
+  try {
+    accessToken = await getAccessToken(clientEmail, privateKey);
+    log('🔄 تم الحصول على Access Token، جاري إرسال الإشعار...', '');
+  } catch (e) {
+    return log(`❌ ${e.message}`, 'error');
+  }
+
+  const payload = {
+    message: {
+      token: deviceToken,
+      notification: { title, body },
+    },
+  };
+
+  try {
+    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const text = await res.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = text; }
+
+    if (res.ok) {
+      const name = parsed?.name || '(بدون name)';
+      log(`✅ تم الإرسال بنجاح!\n\nname: ${name}\n\n${JSON.stringify(parsed, null, 2)}`, 'success');
+    } else {
+      log(`❌ فشل الإرسال: HTTP ${res.status}\n\n${JSON.stringify(parsed, null, 2)}`, 'error');
+    }
+  } catch (err) {
+    log(`❌ خطأ في الاتصال: ${err.message}`, 'error');
+  }
+}
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 import '../presentation/auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -80,15 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       hintText: 'رقم الهاتف',
                       prefixIcon: Icon(Icons.phone),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال رقم الهاتف';
-                      }
-                      if (value.length < 10) {
-                        return 'رقم الهاتف غير صحيح';
-                      }
-                      return null;
-                    },
+                    validator: AppValidators.phone,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -199,12 +192,7 @@ class _RegisterCaregiverScreenState extends ConsumerState<RegisterCaregiverScree
                       labelText: 'رقم الهاتف',
                       prefixIcon: Icon(Icons.phone),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال رقم الهاتف';
-                      }
-                      return null;
-                    },
+                    validator: AppValidators.phone,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -213,12 +201,7 @@ class _RegisterCaregiverScreenState extends ConsumerState<RegisterCaregiverScree
                       labelText: 'الاسم الأول',
                       prefixIcon: Icon(Icons.person),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال الاسم';
-                      }
-                      return null;
-                    },
+                    validator: AppValidators.firstName,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -227,12 +210,7 @@ class _RegisterCaregiverScreenState extends ConsumerState<RegisterCaregiverScree
                       labelText: 'الاسم الأخير',
                       prefixIcon: Icon(Icons.person_outline),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال الاسم';
-                      }
-                      return null;
-                    },
+                    validator: AppValidators.lastName,
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
@@ -317,12 +295,7 @@ class _ActivatePatientScreenState extends ConsumerState<ActivatePatientScreen> {
                       labelText: 'رقم هاتف المريض',
                       prefixIcon: Icon(Icons.phone),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال رقم الهاتف';
-                      }
-                      return null;
-                    },
+                    validator: AppValidators.phone,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -333,12 +306,7 @@ class _ActivatePatientScreenState extends ConsumerState<ActivatePatientScreen> {
                       labelText: 'رمز التفعيل',
                       hintText: 'XXXXXX',
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال رمز التفعيل';
-                      }
-                      return null;
-                    },
+                    validator: AppValidators.activationCode,
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(

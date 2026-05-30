@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../auth/data/models/auth_models.dart';
 
@@ -139,12 +140,7 @@ class _CreatePatientScreenState extends ConsumerState<CreatePatientScreen> {
                     labelText: 'رقم الهاتف',
                     prefixIcon: Icon(Icons.phone),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال رقم الهاتف';
-                    }
-                    return null;
-                  },
+                  validator: AppValidators.phone,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -153,12 +149,7 @@ class _CreatePatientScreenState extends ConsumerState<CreatePatientScreen> {
                     labelText: 'الاسم الأول',
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال الاسم';
-                    }
-                    return null;
-                  },
+                  validator: AppValidators.firstName,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -167,12 +158,7 @@ class _CreatePatientScreenState extends ConsumerState<CreatePatientScreen> {
                     labelText: 'الاسم الأخير',
                     prefixIcon: Icon(Icons.person_outline),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال الاسم';
-                    }
-                    return null;
-                  },
+                  validator: AppValidators.lastName,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -233,6 +219,16 @@ class _CreatePatientScreenState extends ConsumerState<CreatePatientScreen> {
                     return FilterChip(
                       label: Text(condition),
                       selected: isSelected,
+                      selectedColor: AppTheme.primaryColor.withAlpha(51),
+                      checkmarkColor: AppTheme.primaryColor,
+                      backgroundColor: AppTheme.surface,
+                      side: BorderSide(
+                        color: isSelected ? AppTheme.primaryColor : AppTheme.border,
+                      ),
+                      labelStyle: TextStyle(
+                        color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
                       onSelected: (selected) {
                         setState(() {
                           if (selected) {

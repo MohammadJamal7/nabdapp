@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 import '../../patient/data/patient_models.dart';
 import '../../patient/presentation/patient_providers.dart';
 
@@ -14,6 +15,7 @@ class CaregiverThresholdsScreen extends ConsumerStatefulWidget {
 }
 
 class _CaregiverThresholdsScreenState extends ConsumerState<CaregiverThresholdsScreen> {
+  final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _minControllers = {};
   final Map<String, TextEditingController> _maxControllers = {};
   bool _isLoading = false;
@@ -55,104 +57,109 @@ class _CaregiverThresholdsScreenState extends ConsumerState<CaregiverThresholdsS
             _initControllers(thresholds);
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'القيم الافتراضية',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'هذه هي القيم الافتراضية للمراقبة. يمكن تخصيصها لكل مريض.',
-                            style: TextStyle(color: AppTheme.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ..._defaultThresholds.map((threshold) {
-                    final type = threshold['type'] as String;
-                    final minVal = _minControllers[type]?.text.isNotEmpty == true
-                        ? double.tryParse(_minControllers[type]!.text)
-                        : threshold['min'];
-                    final maxVal = _maxControllers[type]?.text.isNotEmpty == true
-                        ? double.tryParse(_maxControllers[type]!.text)
-                        : threshold['max'];
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  threshold['label'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  threshold['unit'] as String,
-                                  style: const TextStyle(color: AppTheme.textSecondary),
-                                ),
-                              ],
+                            const Text(
+                              'القيم الافتراضية',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textSecondary,
+                              ),
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _minControllers[type],
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      labelText: 'الحد الأدنى',
-                                      hintText: threshold['min']?.toString() ?? '-',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _maxControllers[type],
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      labelText: 'الحد الأعلى',
-                                      hintText: threshold['max']?.toString() ?? '-',
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 8),
+                            const Text(
+                              'هذه هي القيم الافتراضية للمراقبة. يمكن تخصيصها لكل مريض.',
+                              style: TextStyle(color: AppTheme.textSecondary),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  }),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _saveThresholds,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('حفظ الحدود'),
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 16),
+                    ..._defaultThresholds.map((threshold) {
+                      final type = threshold['type'] as String;
+                      final minVal = _minControllers[type]?.text.isNotEmpty == true
+                          ? double.tryParse(_minControllers[type]!.text)
+                          : threshold['min'];
+                      final maxVal = _maxControllers[type]?.text.isNotEmpty == true
+                          ? double.tryParse(_maxControllers[type]!.text)
+                          : threshold['max'];
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    threshold['label'] as String,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    threshold['unit'] as String,
+                                    style: const TextStyle(color: AppTheme.textSecondary),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _minControllers[type],
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        labelText: 'الحد الأدنى',
+                                        hintText: threshold['min']?.toString() ?? '-',
+                                      ),
+                                      validator: (v) => AppValidators.thresholdValue(v),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _maxControllers[type],
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        labelText: 'الحد الأعلى',
+                                        hintText: threshold['max']?.toString() ?? '-',
+                                      ),
+                                      validator: (v) => AppValidators.thresholdValue(v),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _saveThresholds,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('حفظ الحدود'),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -177,6 +184,7 @@ class _CaregiverThresholdsScreenState extends ConsumerState<CaregiverThresholdsS
   }
 
   Future<void> _saveThresholds() async {
+    if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
     try {

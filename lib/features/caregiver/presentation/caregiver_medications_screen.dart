@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 import '../../patient/data/patient_models.dart';
 import '../../patient/presentation/patient_providers.dart';
 
@@ -265,7 +266,7 @@ class _MedicationFormSheetState extends ConsumerState<_MedicationFormSheet> {
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'اسم الدواء'),
-                  validator: (v) => v?.isEmpty == true ? 'مطلوب' : null,
+                  validator: AppValidators.medicationName,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -275,7 +276,7 @@ class _MedicationFormSheetState extends ConsumerState<_MedicationFormSheet> {
                         controller: _dosageAmountController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(labelText: 'الجرعة'),
-                        validator: (v) => v?.isEmpty == true ? 'مطلوب' : null,
+                        validator: AppValidators.dosageAmount,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -283,6 +284,7 @@ class _MedicationFormSheetState extends ConsumerState<_MedicationFormSheet> {
                       child: TextFormField(
                         controller: _dosageUnitController,
                         decoration: const InputDecoration(labelText: 'الوحدة'),
+                        validator: (v) => v?.trim().isEmpty == true ? 'الوحدة مطلوبة' : null,
                       ),
                     ),
                   ],
@@ -298,9 +300,49 @@ class _MedicationFormSheetState extends ConsumerState<_MedicationFormSheet> {
                     DropdownMenuItem(value: 'Weekly', child: Text('أسبوعياً')),
                     DropdownMenuItem(value: 'AsNeeded', child: Text('عند الحاجة')),
                   ],
-                  onChanged: (v) => setState(() => _frequencyType = v!),
+                  onChanged: (v) {
+                    setState(() {
+                      _frequencyType = v!;
+                      _syncTimesWithFrequency();
+                    });
+                  },
                 ),
-                const SizedBox(height: 12),
+                if (_frequencyType != 'AsNeeded') ...[
+                  const SizedBox(height: 16),
+                  const Text('أوقات تناول الدواء', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ..._scheduledTimes.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final time = entry.value;
+                    final timeDisplay = time.length >= 8 ? '${time.substring(0, 2)}:${time.substring(3, 5)}' : time;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: InkWell(
+                        onTap: () => _pickTime(i),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'الوقت ${i + 1}',
+                            prefixIcon: const Icon(Icons.access_time),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: _scheduledTimes.length > 1 ? () => _removeTime(i) : null,
+                            ),
+                          ),
+                          child: Text(timeDisplay, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                        ),
+                      ),
+                    );
+                  }),
+                  if (_scheduledTimes.length < _maxTimes) ...[
+                    const SizedBox(height: 4),
+                    TextButton.icon(
+                      onPressed: _addTime,
+                      icon: const Icon(Icons.add, size: 20),
+                      label: const Text('إضافة وقت'),
+                    ),
+                  ],
+                ],
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _instructionsController,
                   decoration: const InputDecoration(labelText: 'التعليمات (اختياري)'),
@@ -319,6 +361,43 @@ class _MedicationFormSheetState extends ConsumerState<_MedicationFormSheet> {
         ),
       ),
     );
+  }
+
+  int get _maxTimes {
+    switch (_frequencyType) {
+      case 'TwiceDaily': return 2;
+      case 'ThreeTimesDaily': return 3;
+      default: return 1;
+    }
+  }
+
+  void _syncTimesWithFrequency() {
+    final max = _maxTimes;
+    while (_scheduledTimes.length > max) _scheduledTimes.removeLast();
+    while (_scheduledTimes.length < max) _scheduledTimes.add('08:00:00');
+  }
+
+  Future<void> _pickTime(int index) async {
+    final parts = _scheduledTimes[index].split(':');
+    final initial = TimeOfDay(hour: int.tryParse(parts[0]) ?? 8, minute: int.tryParse(parts[1]) ?? 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked != null) {
+      setState(() {
+        _scheduledTimes[index] = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00';
+      });
+    }
+  }
+
+  void _addTime() {
+    if (_scheduledTimes.length < _maxTimes) {
+      setState(() => _scheduledTimes.add('08:00:00'));
+    }
+  }
+
+  void _removeTime(int index) {
+    if (_scheduledTimes.length > 1) {
+      setState(() => _scheduledTimes.removeAt(index));
+    }
   }
 
   Future<void> _save() async {

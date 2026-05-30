@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../core/signalr/signalr_service.dart';
+import '../../../core/push/push_service.dart';
 import '../data/auth_api_service.dart';
 import '../data/models/auth_models.dart';
 
@@ -106,6 +107,10 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       userId: userId,
       patientId: patientId,
     );
+
+    // Connect real-time and register push token after successful auth
+    SignalRService.connect();
+    PushService.registerTokenAfterLogin();
   }
 
   Future<void> login(String phoneNumber) async {

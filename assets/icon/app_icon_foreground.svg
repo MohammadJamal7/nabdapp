@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Transparent background -->
+  <rect width="1024" height="1024" fill="none"/>
+  
+  <!-- Heart/Pulse Icon - centered for adaptive icon -->
+  <g transform="translate(512, 480)" fill="none" stroke="white" stroke-width="56" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Heart shape -->
+    <path d="M0,140 C-160,50 -230,-90 -230,-160 C-230,-280 -140,-320 -70,-320 C-25,-320 0,-280 0,-230 C0,-280 25,-320 70,-320 C140,-320 230,-280 230,-160 C230,-90 160,50 0,140 Z" fill="white" stroke="none"/>
+    
+    <!-- Pulse line -->
+    <path d="M-200,0 L-130,0 L-90,-70 L-50,70 L0,0 L50,0" stroke="#FFFFFF" stroke-width="36" fill="none"/>
+  </g>
+  
+  <!-- Letter N badge - smaller for foreground -->
+  <circle cx="780" cy="750" r="120" fill="white"/>
+  <text x="780" y="805" font-family="Arial, sans-serif" font-size="130" font-weight="bold" fill="#4A90D9" text-anchor="middle">N</text>
+</svg>

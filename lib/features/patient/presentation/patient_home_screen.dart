@@ -11,7 +11,7 @@ import '../../auth/presentation/auth_providers.dart' show UserRole;
 import 'patient_medications_screen.dart';
 import 'patient_vitals_screen.dart';
 import 'patient_articles_screen.dart';
-import 'patient_profile_screen.dart';
+import 'patient_profile_view_screen.dart';
 import 'sos_screen.dart';
 
 class PatientHomeScreen extends ConsumerWidget {
@@ -45,7 +45,7 @@ class PatientHomeScreen extends ConsumerWidget {
             onSelected: (value) {
               switch (value) {
                 case 'profile':
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => PatientProfileScreen(patientId: patientId)));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientProfileViewScreen()));
                   break;
                 case 'logout':
                   ref.read(authStateProvider.notifier).logout();

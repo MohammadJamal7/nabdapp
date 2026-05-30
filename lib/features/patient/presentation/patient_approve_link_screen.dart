@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 
 class PatientApproveLinkScreen extends ConsumerStatefulWidget {
   const PatientApproveLinkScreen({super.key});
@@ -79,10 +80,7 @@ class _PatientApproveLinkScreenState extends ConsumerState<PatientApproveLinkScr
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 24, fontFamily: 'Cairo', letterSpacing: 8),
                   decoration: const InputDecoration(labelText: 'رمز الدعوة', hintText: 'XXXXXX'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'الرجاء إدخال رمز الدعوة';
-                    return null;
-                  },
+                  validator: AppValidators.inviteCode,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(

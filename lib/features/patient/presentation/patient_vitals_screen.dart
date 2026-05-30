@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/validators/app_validators.dart';
 import '../data/patient_models.dart';
 import '../presentation/patient_providers.dart';
 
@@ -14,6 +15,7 @@ class PatientVitalsScreen extends ConsumerStatefulWidget {
 
 class _PatientVitalsScreenState extends ConsumerState<PatientVitalsScreen> {
   String _selectedType = 'HeartRate';
+  final _formKey = GlobalKey<FormState>();
   final _valueController = TextEditingController();
   final _diastolicController = TextEditingController();
   bool _isLoading = false;
@@ -34,17 +36,9 @@ class _PatientVitalsScreenState extends ConsumerState<PatientVitalsScreen> {
   }
 
   Future<void> _recordVital() async {
-    final value = double.tryParse(_valueController.text);
-    if (value == null) {
-      _showError('الرجاء إدخال قيمة صحيحة');
-      return;
-    }
-
+    if (!_formKey.currentState!.validate()) return;
+    final value = double.parse(_valueController.text);
     final config = _readingTypes.firstWhere((r) => r['type'] == _selectedType);
-    if (value < config['min'] || value > config['max']) {
-      _showError('القيمة خارج النطاق المسموح');
-      return;
-    }
 
     setState(() => _isLoading = true);
 
@@ -68,18 +62,15 @@ class _PatientVitalsScreenState extends ConsumerState<PatientVitalsScreen> {
         longitude: position?.longitude,
       ));
 
-      // If systolic BP was recorded, also record diastolic as separate reading
-      if (_selectedType == 'SystolicBP') {
-        final diastolic = double.tryParse(_diastolicController.text);
-        if (diastolic != null) {
-          await notifier.recordVital(RecordVitalCommand(
-            readingType: 'DiastolicBP',
-            value: diastolic,
-            unit: 'mmHg',
-            latitude: position?.latitude,
-            longitude: position?.longitude,
-          ));
-        }
+      if (_selectedType == 'SystolicBP' && _diastolicController.text.trim().isNotEmpty) {
+        final diastolic = double.parse(_diastolicController.text.trim());
+        await notifier.recordVital(RecordVitalCommand(
+          readingType: 'DiastolicBP',
+          value: diastolic,
+          unit: 'mmHg',
+          latitude: position?.latitude,
+          longitude: position?.longitude,
+        ));
       }
 
       if (mounted) {
@@ -112,77 +103,100 @@ class _PatientVitalsScreenState extends ConsumerState<PatientVitalsScreen> {
         textDirection: TextDirection.rtl,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'اختر نوع القياس',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _readingTypes.map((type) {
-                  final isSelected = _selectedType == type['type'];
-                  return ChoiceChip(
-                    label: Text(type['label'] as String),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedType = type['type'] as String);
-                    },
-                    selectedColor: AppTheme.primaryColor,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppTheme.textPrimary,
-                      fontFamily: 'Cairo',
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'أدخل القيمة',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _valueController,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 32, fontFamily: 'Cairo'),
-                decoration: InputDecoration(
-                  hintText: _readingTypes.firstWhere((r) => r['type'] == _selectedType)['unit'] as String,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'اختر نوع القياس',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-              ),
-              if (_selectedType == 'SystolicBP') ...[
                 const SizedBox(height: 16),
-                const Text(
-                  'الضغط الانبساطي (اختياري)',
-                  style: TextStyle(color: AppTheme.textSecondary),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _readingTypes.map((type) {
+                    final isSelected = _selectedType == type['type'];
+                    return ChoiceChip(
+                      label: Text(type['label'] as String),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() => _selectedType = type['type'] as String);
+                          _valueController.clear();
+                        }
+                      },
+                      selectedColor: AppTheme.primaryColor,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : AppTheme.textPrimary,
+                        fontFamily: 'Cairo',
+                      ),
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _diastolicController,
+                const SizedBox(height: 32),
+                Text(
+                  'أدخل القيمة',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _valueController,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 32, fontFamily: 'Cairo'),
-                  decoration: const InputDecoration(
-                    hintText: 'الضغط الانبساطي',
+                  decoration: InputDecoration(
+                    hintText: _readingTypes.firstWhere((r) => r['type'] == _selectedType)['unit'] as String,
                   ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال قيمة';
+                    final parsed = double.tryParse(v.trim());
+                    if (parsed == null) return 'الرجاء إدخال رقم صحيح';
+                    final config = _readingTypes.firstWhere((r) => r['type'] == _selectedType);
+                    if (parsed < (config['min'] as num) || parsed > (config['max'] as num)) {
+                      return 'القيمة خارج النطاق (${config['min']}-${config['max']})';
+                    }
+                    return null;
+                  },
+                ),
+                if (_selectedType == 'SystolicBP') ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'الضغط الانبساطي (اختياري)',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _diastolicController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 32, fontFamily: 'Cairo'),
+                    decoration: const InputDecoration(
+                      hintText: 'الضغط الانبساطي',
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      final parsed = double.tryParse(v.trim());
+                      if (parsed == null) return 'الرجاء إدخال رقم صحيح';
+                      if (parsed < 30 || parsed > 150) return 'القيمة خارج النطاق (30-150)';
+                      return null;
+                    },
+                  ),
+                ],
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _recordVital,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text('حفظ'),
                 ),
               ],
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _recordVital,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text('حفظ'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

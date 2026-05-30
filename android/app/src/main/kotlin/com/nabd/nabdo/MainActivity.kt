@@ -1,4 +1,4 @@
-package com.example.nabdapp
+package com.nabd.nabdo
 
 import io.flutter.embedding.android.FlutterActivity
 
