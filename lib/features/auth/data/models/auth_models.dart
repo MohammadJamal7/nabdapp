@@ -174,7 +174,6 @@ class PatientSummaryDto {
   final String? dateOfBirth;
   final String? gender;
   final bool? isActivated;
-
   PatientSummaryDto({
     required this.id,
     this.firstNameAr,

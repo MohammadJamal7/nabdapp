@@ -66,4 +66,6 @@ class AuthApiService {
     final response = await ApiClient.get('${ApiConstants.patients}/$patientId');
     return UserDto.fromJson(response.data);
   }
+
+
 }

@@ -21,10 +21,10 @@ class AppValidators {
   static String? firstName(String? value) => name(value, 'الاسم الأول');
   static String? lastName(String? value) => name(value, 'الاسم الأخير');
 
-  /// Activation code: 6 alphanumeric chars
+  /// Activation code: 8 alphanumeric chars
   static String? activationCode(String? value) {
     if (value == null || value.trim().isEmpty) return 'رمز التفعيل مطلوب';
-    if (value.trim().length != 6) return 'رمز التفعيل يجب أن يكون 6 أحرف';
+    if (value.trim().length != 8) return 'رمز التفعيل يجب أن يكون 8 أحرف';
     return null;
   }
 

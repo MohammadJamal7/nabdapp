@@ -51,19 +51,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 60),
-                  Icon(
-                    Icons.favorite,
-                    size: 80,
-                    color: AppTheme.primaryColor,
+                  const SizedBox(height: 40),
+                  Image.asset(
+                    'assets/icon/logo.png',
+                    height: 120,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'نبض',
-                    style: Theme.of(context).textTheme.displayLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Text(
                     'رعايتكم في أيدي أمينة',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -304,7 +298,7 @@ class _ActivatePatientScreenState extends ConsumerState<ActivatePatientScreen> {
                     style: const TextStyle(fontSize: 24, fontFamily: 'Cairo', letterSpacing: 8),
                     decoration: const InputDecoration(
                       labelText: 'رمز التفعيل',
-                      hintText: 'XXXXXX',
+                      hintText: 'XXXXXXXX',
                     ),
                     validator: AppValidators.activationCode,
                   ),

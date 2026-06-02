@@ -191,3 +191,4 @@ final patientsListProvider = FutureProvider<List<PatientSummaryDto>>((ref) async
   final apiService = ref.watch(authApiServiceProvider);
   return await apiService.getPatients();
 });
+
